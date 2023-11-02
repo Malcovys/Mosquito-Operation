@@ -1,7 +1,7 @@
 # Virtual env nom:
  env
 
-# Ecrire dans package.txt: 
+# Ecrire dans package.txt:
     pip freeze >> package.txt
 
 # Git .gitignore content:

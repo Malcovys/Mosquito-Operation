@@ -1,1 +1,0 @@
-# Init Mosquito Operation project

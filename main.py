@@ -1,67 +1,91 @@
 import pygame
 import random
 
-def setRandomPosition(screen_height, screen_width, image):
-    x_position = random.randint(0, screen_width - image.get_width())
-    y_position = random.randint(0, screen_height - image.get_height())
-    print(x_position, y_position)
-    return (x_position, y_position)
+def setRandomPosition(screen_height, screen_width, position, image):
+    position.x = random.randint(0, screen_width - image.get_width())
+    position.y = random.randint(0, screen_height - image.get_height())
 
-present_mosquito = 0
+    # Limitateur
+    position.x = max(0, min(position.x, screen_width - image.get_width()))
+    position.y = max(0, min(position.y, screen_height - image.get_height()))
 
-SCREEN_WIDTH = 650
-SCREEN_HEIGHT = 550
-SCREEN_FEEL_COLOR = (240, 240, 242)
-MOSQUITO_DISAPPEAR = (0, 0, 0, 0)
+    return position
 
-IMAGE_WIDTH, IMAGE_HEIGHT = (50, 50)
+def doMosquitoFlyEffect(position):
+    position.x += random.randint(-3, 3)
+    position.y += random.randint(-3, 3)
 
-MAX_MOSQUITO_APPARITION_NUMBER_SYNC = 1
+    return position
 
-mouse_x_click = -1
-mouse_y_click = -1
+background_image_path = './assets/images/background.jpg'
+mosquito_image_path = './assets/images/mosquito.png'
+mosquito_crushed_image_path = './assets/images/crushed.png'
 
-image_path = './assets/images/mosquito2.jpeg'
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 600
+SCREEN_FILL_COLOR = (240, 240, 242)
+MOSQUITO_WIDTH, MOSQUITO_HEIGHT = 55, 55
+CRUSHED_MOSQUITO_APPEAR_TIME = 3000
+
+mosquito_apparition_rate = 0.02  # Taux d'apparition (2%)
 
 pygame.init()
 
-original_image = pygame.image.load(image_path)
-image = pygame.transform.scale(original_image, (IMAGE_WIDTH, IMAGE_HEIGHT))
+background = pygame.image.load(background_image_path)
+
+original_mosquito_image = pygame.image.load(mosquito_image_path)
+mosquito_image = pygame.transform.scale(original_mosquito_image, (MOSQUITO_WIDTH, MOSQUITO_HEIGHT))
+
+original_mosquito_crushed_image = pygame.image.load(mosquito_crushed_image_path)
+crushed_mosquito_image = pygame.transform.scale(original_mosquito_crushed_image, (MOSQUITO_WIDTH, MOSQUITO_HEIGHT))
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-screen.fill((0, 0, 0))
-
-clock = pygame.time.Clock()
 
 run = True
+alive_mosquitos_rect_properties = []
+crushed_mosquitos_rect_properties = []
+
+clock = pygame.time.Clock()
+FPS = 30
 while run:
-    clock.tick(60)
+    clock.tick(FPS)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse_x_click, mouse_y_click = pygame.mouse.get_pos()
-        
-    if run:
 
-        if not present_mosquito:
-            x_mosquito_position, y_mosquito_position = setRandomPosition(SCREEN_HEIGHT, SCREEN_WIDTH, image)
-            screen.blit(image, (x_mosquito_position, y_mosquito_position))
-            present_mosquito = 1
+            # Gestion du splash
+            for alive_mosquito_rect_property in alive_mosquitos_rect_properties[:]:
+                if alive_mosquito_rect_property.collidepoint(mouse_x_click, mouse_y_click):
+                    crushed_mosquitos_rect_properties.append((crushed_mosquito_image, alive_mosquito_rect_property.topleft, pygame.time.get_ticks()))
+                    alive_mosquitos_rect_properties.remove(alive_mosquito_rect_property)
 
-        if (x_mosquito_position < mouse_x_click  and mouse_x_click < x_mosquito_position + IMAGE_WIDTH):
-            if(y_mosquito_position < mouse_y_click and mouse_y_click < y_mosquito_position + IMAGE_HEIGHT):
-                print("Touché !")
-                mouse_x_click = -1
-                mouse_y_click = -1
+    screen.blit(background, (0, 0))
 
-                # mosquito = image.get_rect()
-                # mosquito.fill(MOSQUITO_DISAPPEAR)
+    # Gestion de l'apparition des moustiques
+    if random.random() < mosquito_apparition_rate:
+        mosquito_rect_property = mosquito_image.get_rect()
+        setRandomPosition(SCREEN_HEIGHT, SCREEN_WIDTH, mosquito_rect_property, mosquito_image)
+        alive_mosquitos_rect_properties.append(mosquito_rect_property)
 
-                present_mosquito = 0
+    for i in range(len(alive_mosquitos_rect_properties)):
+        new_position = doMosquitoFlyEffect(alive_mosquitos_rect_properties[i])
+        alive_mosquitos_rect_properties[i] = pygame.Rect(new_position[0], new_position[1], MOSQUITO_WIDTH, MOSQUITO_HEIGHT)
 
-        pygame.display.flip()
+    for alive_mosquito_rect_property in alive_mosquitos_rect_properties:
+        screen.blit(mosquito_image, alive_mosquito_rect_property.topleft)
+
+    for i in range(len(crushed_mosquitos_rect_properties)):
+        substitute_image, position, start_time = crushed_mosquitos_rect_properties[i]
+        current_time = pygame.time.get_ticks()
+
+        # Afficher l'image écrasée pendant 3 secondes (3000 millisecondes)
+        if current_time - start_time < CRUSHED_MOSQUITO_APPEAR_TIME:
+            screen.blit(substitute_image, position)
+
+    pygame.display.flip()
 
 pygame.quit()

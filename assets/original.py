@@ -41,7 +41,7 @@ def show_start_screen():
     accueil_image = pygame.image.load('assets/bg.jpg')
     accueil_image = pygame.transform.scale(accueil_image, (screen_width, screen_height))
 
-    button_rect = pygame.Rect(500, 450, 200, 50)  # Définissez button_rect en dehors de la boucle
+    button_rect = pygame.Rect(500, 450, 200, 50)  # Définit button_rect en dehors de la boucle
 
     while True:
         for event in pygame.event.get():

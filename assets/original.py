@@ -6,7 +6,8 @@ import random
 # Initialisation
 pygame.init()
 
-screen = pygame.display.set_mode((1200, 600))
+screen_width, screen_height = 1200, 600
+screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Mosquito-Operation')
 
 # Importation du background
@@ -20,11 +21,52 @@ moustique_image = pygame.transform.scale(original_moustique_image, (55, 55))
 sang_image = pygame.image.load('assets/sang.png')
 sang_image = pygame.transform.scale(sang_image, (55, 55))
 
+#bande sound du game
+audio = pygame.mixer.Sound ("assets/musique/DJVI - Back On Track.mp3")
+
+#pour que le son se joue en boucle
+audio.play (-1)
+
+#pourle temps de pause du sound
+TIMEOUT = 5
+
 # Liste pour stocker les positions de chaque moustique
 moustique_rects = []
 sang_rects = []  # Liste pour stocker les positions de chaque image de sang
 
 clock = pygame.time.Clock()
+def show_start_screen():
+    font = pygame.font.Font("assets/fonts/Montserrat-ExtraBold.ttf", 80)
+    text_color = (255, 255, 255)
+    accueil_image = pygame.image.load('assets/bg.jpg')
+    accueil_image = pygame.transform.scale(accueil_image, (screen_width, screen_height))
+
+    button_rect = pygame.Rect(500, 450, 200, 50)  # Définissez button_rect en dehors de la boucle
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == MOUSEBUTTONDOWN and event.button == 1:
+                mouse_pos = pygame.mouse.get_pos()
+                if button_rect.collidepoint(mouse_pos):
+                    # L'utilisateur a cliqué sur "Start", quitter l'écran d'accueil
+                    return
+
+        # Afficher l'écran d'accueil avec le nom du jeu et le bouton "Start"
+        screen.blit(accueil_image, (0, 0))
+        text = font.render('Mosquito Operation', True, text_color)
+        text_rect = text.get_rect(center=(screen_width // 2, 200))
+        screen.blit(text, text_rect)
+        start_text = pygame.image.load("assets/bttn_start.png")
+        start_text = pygame.transform.scale(start_text, (500, 150))
+        start_text_rect = start_text.get_rect(center=button_rect.center)
+        screen.blit(start_text, start_text_rect)
+
+        pygame.display.flip()
+
+show_start_screen()
 
 # La boucle de jeu principale
 while True:
@@ -49,7 +91,7 @@ while True:
     # Appliquer notre background
     screen.blit(background, (0, 0))
     # Ajouter un nouveau moustique à la liste à des intervalles aléatoires
-    if random.randint(1, 100) < 2:  # Choisit un nombre aléatoire entre 1 et 100, si c'est 1 ou 2, ajoute un moustique
+    if random.randint(1, 110) < 2:  # Choisit un nombre aléatoire entre 1 et 100, si c'est 1 ou 2, ajoute un moustique
         moustique_rect = moustique_image.get_rect()
         moustique_rect.x = random.randint(0, 1100)  # Position aléatoire en x
         moustique_rect.y = random.randint(0, 500)  # Position aléatoire en y
